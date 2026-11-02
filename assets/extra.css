@@ -1,0 +1,337 @@
+/*
+  Theme «Тетрадь» (notebook), part 1: tokens, Material mapping, typography,
+  layout. Part 2, chrome.css: header, sidebars, footer. Part 3,
+  components.css: links and focus, code, tables, callouts, checklists.
+
+  Every colour is a --c-* token defined twice: light values in :root, dark
+  values in [data-md-color-scheme="slate"]. tests/test_contrast.py parses
+  both blocks and checks every text/background pair (7:1 for reading text
+  and links on the page, 6.5:1 for links in a callout, 4.5:1 for syntax
+  colours, 3:1 for marks). Keep each token as a plain #RRGGBB value so the
+  test can read it.
+
+  Sizes: Material sets html { font-size: 125% }, so 1rem = 20px here
+  (22px above 1600px wide, 24px above 2000px). Body text is .95rem = 19px.
+  Spacing is in px on the 4/8 scale (--sp-*).
+*/
+
+:root {
+  /* Surfaces and text */
+  --c-bg: #F7F6F3;
+  --c-surface: #FFFFFF;
+  --c-text: #222222;
+  --c-muted: #4A4A46;
+  --c-border: #E3E1DC;
+
+  /* One accent (links, focus ring, controls), one success colour */
+  --c-link: #1A4F7D;
+  --c-link-visited: #5A3E8C;
+  --c-accent: #1A4F7D;
+  --c-success: #2D6A31;
+
+  /* Callouts: task (tip, note), answer (success), info (Stepik), warn */
+  --c-task-bg: #F6EBC7;
+  --c-task-text: #3E2E00;
+  --c-answer-bg: #DFEBDD;
+  --c-answer-text: #1E3A22;
+  --c-answer-bg-hover: #CFE0CC;
+  --c-info-bg: #DCEBF6;
+  --c-info-text: #143B5C;
+  --c-warn-bg: #F7E0DC;
+  --c-warn-text: #5A1F18;
+
+  /* Code and syntax colours */
+  --c-code-bg: #EFEDE8;
+  --c-code-fg: #222222;
+  /* Right edge of a code line that runs on past the box (components.css). */
+  --c-code-shade: #C9C5BC;
+  --c-hl-keyword: #1B4F7E;
+  --c-hl-string: #255228;
+  --c-hl-number: #7A3A12;
+  --c-hl-comment: #4F4D48;
+  --c-hl-function: #5A3E8C;
+
+  /* Type */
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* Android has no Georgia: Noto Serif (Android 7+) and Droid Serif
+     (older) ship with it and are as wide as Georgia, so the phone header
+     still fits. Nothing is downloaded. */
+  --font-heading: Georgia, "Noto Serif", "Droid Serif", "Times New Roman", serif;
+  --font-mono: "Cascadia Code", Consolas, "SF Mono", Menlo, monospace;
+  --size-body: .95rem;
+  --line-body: 1.65;
+  --measure: 68ch;
+
+  /* Spacing, 4/8 scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+
+  /* Radii: controls and containers */
+  --radius-control: 4px;
+  --radius-container: 8px;
+
+  /* Material reads these two for its font stacks (theme.font is false) */
+  --md-text-font: var(--font-body);
+  --md-code-font: var(--font-mono);
+}
+
+[data-md-color-scheme="slate"] {
+  --c-bg: #1A1917;
+  --c-surface: #232220;
+  --c-text: #ECEAE4;
+  --c-muted: #B8B5AD;
+  --c-border: #3A3835;
+
+  --c-link: #8FBCE6;
+  --c-link-visited: #C4B0E6;
+  --c-accent: #8FBCE6;
+  --c-success: #8CCB91;
+
+  --c-task-bg: #2E2A1F;
+  --c-task-text: #F0E2B8;
+  --c-answer-bg: #1F2E22;
+  --c-answer-text: #CFE4D0;
+  --c-answer-bg-hover: #283A2B;
+  --c-info-bg: #1E2A36;
+  --c-info-text: #C9DDF0;
+  --c-warn-bg: #36211E;
+  --c-warn-text: #F0CFC9;
+
+  --c-code-bg: #262522;
+  --c-code-fg: #ECEAE4;
+  --c-code-shade: #080807;
+  --c-hl-keyword: #9CC4EA;
+  --c-hl-string: #A9D3A0;
+  --c-hl-number: #E6B98F;
+  --c-hl-comment: #B5B1A8;
+  --c-hl-function: #C4B0E6;
+}
+
+/* Material's own variables, pointed at the tokens (both schemes). The body
+   carries data-md-color-scheme, so this outranks Material's palette rules. */
+body[data-md-color-scheme] {
+  --md-default-bg-color: var(--c-bg);
+  --md-default-fg-color: var(--c-text);
+  --md-default-fg-color--light: var(--c-muted);
+  --md-default-fg-color--lighter: var(--c-muted);
+  --md-default-fg-color--lightest: var(--c-border);
+
+  --md-primary-fg-color: var(--c-bg);
+  --md-primary-fg-color--light: var(--c-bg);
+  --md-primary-fg-color--dark: var(--c-bg);
+  --md-primary-bg-color: var(--c-text);
+  --md-primary-bg-color--light: var(--c-muted);
+  --md-accent-fg-color: var(--c-accent);
+  --md-accent-fg-color--transparent: var(--c-border);
+  --md-accent-bg-color: var(--c-bg);
+
+  --md-typeset-color: var(--c-text);
+  --md-typeset-a-color: var(--c-link);
+  --md-typeset-table-color: var(--c-border);
+  --md-typeset-table-color--light: var(--c-surface);
+  --md-admonition-fg-color: var(--c-text);
+  --md-admonition-bg-color: var(--c-bg);
+
+  --md-code-bg-color: var(--c-code-bg);
+  --md-code-fg-color: var(--c-code-fg);
+  --md-code-bg-color--light: var(--c-code-bg);
+  --md-code-bg-color--lighter: var(--c-code-bg);
+  --md-code-hl-color: var(--c-task-bg);
+  --md-code-hl-color--light: var(--c-task-bg);
+  --md-code-hl-keyword-color: var(--c-hl-keyword);
+  --md-code-hl-string-color: var(--c-hl-string);
+  --md-code-hl-number-color: var(--c-hl-number);
+  --md-code-hl-special-color: var(--c-hl-number);
+  --md-code-hl-constant-color: var(--c-hl-function);
+  --md-code-hl-function-color: var(--c-hl-function);
+  --md-code-hl-comment-color: var(--c-hl-comment);
+  --md-code-hl-generic-color: var(--c-hl-comment);
+  --md-code-hl-name-color: var(--c-code-fg);
+  --md-code-hl-operator-color: var(--c-code-fg);
+  --md-code-hl-punctuation-color: var(--c-code-fg);
+  --md-code-hl-variable-color: var(--c-code-fg);
+
+  --md-footer-fg-color: var(--c-text);
+  --md-footer-fg-color--light: var(--c-muted);
+  --md-footer-fg-color--lighter: var(--c-muted);
+  --md-footer-bg-color: var(--c-bg);
+  --md-footer-bg-color--dark: var(--c-bg);
+
+  --md-shadow-z1: none;
+  --md-shadow-z2: none;
+  --md-shadow-z3: none;
+
+  /* Square checkbox glyphs (Material Design Icons: checkbox-blank-outline,
+     checkbox-marked) instead of Material's filled circles. */
+  --md-tasklist-icon: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2m0 2v14H5V5z"/></svg>');
+  --md-tasklist-icon--checked: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m10 17-5-5 1.41-1.42L10 14.17l7.59-7.59L19 8m0-5H5c-1.11 0-2 .89-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2"/></svg>');
+
+  background-color: var(--c-bg);
+  color: var(--c-text);
+}
+
+/* One offset for everything that scrolls into view (anchor jumps from the
+   outline, keyboard focus): the 48px sticky header plus 24px of air.
+   Material's own :target scroll-margin is zeroed so the two do not add up. */
+html {
+  scroll-padding-top: 72px;
+}
+
+html .md-typeset :target {
+  scroll-margin-top: 0;
+}
+
+/* ---------- Typography ---------- */
+
+.md-typeset {
+  font-size: var(--size-body);
+  line-height: var(--line-body);
+  color: var(--c-text);
+  text-align: left;
+}
+
+/* Lining figures wherever the heading font is set: Georgia's default
+   figures are old-style, and in «Этап 0» the zero would be as small and
+   round as the letter «о». "lnum" is the same request for older engines.
+   Noto Serif and Droid Serif have lining figures by default. */
+.md-typeset :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-heading);
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
+  font-weight: 700;
+  color: var(--c-text);
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+/* Proximity: a heading sits closer to its own text than to the block above. */
+.md-typeset h1 {
+  margin: 0 0 var(--sp-6);
+  font-size: 1.6rem;
+  line-height: 1.25;
+}
+
+/* Phones: the h1 is a share of the screen width, so its longest word
+   («программирование», 10.574em in Georgia Bold) fits the column (the
+   screen less 32px) with room for a 15px classic scrollbar: 25px at 320px,
+   29px at 360px, the full 32px from 394px. At 32px the word broke inside
+   at 320 and 360px. Never below 24px. */
+@media screen and (max-width: 35.984375em) {
+  .md-typeset h1 {
+    font-size: clamp(1.2rem, calc((100vw - 3rem) / 10.8), 1.6rem);
+  }
+
+  /* With the phone's text size raised the 24px floor grows too (1.2rem),
+     and the column shrinks (its margins are in rem): from about 1.1 times
+     the size the word no longer fits, and it broke anywhere, with no
+     hyphen. It now breaks at a hyphen («програм-/мирование»; the page is
+     lang="ru"). Only then: with `hyphens: auto` at the normal size, the
+     balanced titles of 4 pages took a hyphen where every word fits (the
+     front page's among them). The page column is a size container, and
+     `rem` in @container is the page's own text size, so the rule follows
+     it: the word at the floor needs 12.69rem (10.574em of 1.2rem); at the
+     normal size the column is at least 288px (14.4rem).
+     The same goes for the text under it: at 1.5 times the size, long
+     words in paragraphs, lists, tables and the other headings broke at a
+     random letter («Зарегистрироват|ься», «Самозанятост|ь»). In the text,
+     only words of 12 letters or more take a hyphen, with 5 letters before
+     it and 4 after, so shorter words move to the next line whole.
+     Headings keep the browser's own limits: their letters are bigger, so
+     «Форматируем» (11) did not fit at 320px. Below 8.5rem (1.75 times
+     the size at 320px, twice at 360-390px) a line of a list holds 8 to 11
+     letters, and words of 7 to 11 letters broke anywhere; there they take
+     a hyphen from 7 letters, 3 on each side. Code never takes one: a
+     hyphen in a Python name would be a different name (re-audit A NEW-1). */
+  .md-content__inner {
+    container-type: inline-size;
+  }
+
+  @container (max-width: 13rem) {
+    .md-typeset :is(h1, h2, h3, h4, h5, h6, p, li, td, th, dd) {
+      hyphens: auto;
+      overflow-wrap: break-word;
+    }
+
+    .md-typeset :is(p, li, td, th, dd) {
+      hyphenate-limit-chars: 12 5 4;
+    }
+
+    .md-typeset :is(code, pre, kbd) {
+      hyphens: manual;
+    }
+  }
+
+  @container (max-width: 8.5rem) {
+    .md-typeset :is(p, li, td, th, dd) {
+      hyphenate-limit-chars: 7 3 3;
+    }
+  }
+}
+
+.md-typeset h2 {
+  margin: var(--sp-12) 0 var(--sp-3);
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+.md-typeset h3 {
+  margin: var(--sp-8) 0 var(--sp-2);
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.md-typeset h2 + h3 {
+  margin-top: var(--sp-4);
+}
+
+.md-typeset :is(h4, h5, h6) {
+  margin: var(--sp-6) 0 var(--sp-2);
+  font-size: 1em;
+  line-height: 1.3;
+}
+
+.md-typeset :is(p, ul, ol, dl, blockquote, pre) {
+  margin: 0 0 var(--sp-6);
+}
+
+.md-typeset :is(ul, ol) li {
+  margin-bottom: var(--sp-2);
+}
+
+.md-typeset :is(ul, ol) li :is(p, ul, ol) {
+  margin: var(--sp-2) 0;
+}
+
+.md-typeset hr {
+  margin: var(--sp-8) 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+/* Orientation line above the page title (rendered by overrides/main.html). */
+.md-typeset .page-orient {
+  margin: 0 0 var(--sp-2);
+  font-size: .85rem;
+  line-height: 1.4;
+  color: var(--c-muted);
+}
+
+/* ---------- Layout ---------- */
+
+/* Wider grid than Material's 61rem, so at 1366px the text column keeps its
+   68ch measure and code blocks get the rest of the content area. */
+.md-grid {
+  max-width: 76rem;
+}
+
+.md-typeset > :is(p, ul, ol, dl, blockquote, h1, h2, h3, h4, h5, h6, hr, .page-orient, .admonition, details, .progress-list, .progress-footer) {
+  max-width: var(--measure);
+}
+
+.md-content__inner {
+  padding-top: var(--sp-6);
+}

@@ -1,0 +1,609 @@
+/*
+  Theme «Тетрадь», part 3: what sits inside the page. Links and focus,
+  code, tables, callouts and the «Показать ответ» button, checklists (Мой
+  прогресс), the video note, and the reduced-motion switch for the whole
+  site. Loads after extra.css and chrome.css (mkdocs.yml extra_css).
+
+  Colours come only from --c-* tokens, spacing from --sp-*, corners from
+  --radius-*; the px values left are sizes (icons, targets).
+*/
+
+/* ---------- Links and focus ---------- */
+
+.md-typeset a {
+  color: var(--c-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.md-typeset a:visited {
+  color: var(--c-link-visited);
+}
+
+.md-typeset a:hover {
+  color: var(--c-link);
+  text-decoration-thickness: 3px;
+}
+
+.md-typeset a:active {
+  color: var(--c-text);
+}
+
+/* Anchor marks next to headings are hover-only; the learner does not need
+   them, and hiding them removes a Tab stop per heading. */
+.md-typeset .headerlink {
+  display: none;
+}
+
+/* One focus ring everywhere, in both themes: 3px, so it stays at least 2
+   CSS px after Windows display scaling snaps it to device pixels.
+   !important because Material
+   removes outlines on several controls with more specific selectors. */
+:focus-visible {
+  outline: 3px solid var(--c-accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* The skip link: 16px, not Material's 12.8px. */
+.md-skip {
+  font-size: .8rem;
+  color: var(--c-bg);
+  background-color: var(--c-text);
+}
+
+/* ---------- Code ---------- */
+
+.md-typeset code,
+.md-typeset kbd,
+.md-typeset pre {
+  font-family: var(--font-mono);
+}
+
+.md-typeset code {
+  padding: 0 var(--sp-1);
+  font-size: .9em;
+  border-radius: var(--radius-control);
+}
+
+.md-typeset pre {
+  font-size: 1em;
+}
+
+/* Code scrolls sideways; Python is never wrapped (a wrapped line would blur
+   its indentation). A line that runs on past the box gets a shade on the
+   box's right edge: Android shows no scrollbar until a swipe. The shade
+   (second layer) stays on the edge; the first layer, solid code colour as
+   wide as the shade, sits at the very end of the line and scrolls with it,
+   so it covers the shade once the end is in view, and from the start when
+   the line fits. Right padding: room for the 44px copy button (4px in from
+   the corner) and 8px. Not on paper (print.css). */
+.md-typeset pre > code {
+  padding: var(--sp-4) calc(var(--sp-1) + 44px + var(--sp-2)) var(--sp-4) var(--sp-4);
+  font-size: .9em;
+  line-height: 1.5;
+  background:
+    linear-gradient(to left, var(--c-code-bg) 50%, transparent) right / 48px 100% no-repeat local,
+    linear-gradient(to left, var(--c-code-shade), transparent) right / 24px 100% no-repeat scroll,
+    var(--c-code-bg);
+  border-radius: var(--radius-container);
+}
+
+/* Phones: the copy button has the top row to itself and the code starts
+   below it (4px + 44px + 4px), so the right side needs only the left
+   side's 16px. */
+@media screen and (max-width: 44.984375em) {
+  .md-typeset pre > code {
+    padding-top: calc(var(--sp-1) + 44px + var(--sp-1));
+    padding-right: var(--sp-4);
+  }
+}
+
+/* Program output (```text): what a program prints is read, not typed in,
+   so no copy button and no room kept for one. Text the learner is meant
+   to copy (a letter template, a prompt) is marked
+   ``` { .text .copy-text } and keeps its button. */
+.md-typeset .language-text:not(.copy-text) .md-code__nav {
+  display: none;
+}
+
+.md-typeset .language-text:not(.copy-text) pre > code {
+  padding-top: var(--sp-4);
+  padding-right: var(--sp-4);
+}
+
+/* Text to copy wraps, so a letter template is read whole on a phone
+   without a sideways scroll; the copy is still the original lines. */
+.md-typeset .copy-text pre > code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Copy button (Material 9.8 renders it as .md-code__nav > .md-code__button):
+   44x44, its label «Скопировать» shows on hover and on keyboard focus, and
+   always on phones (below). */
+.md-code__nav,
+:hover > .md-code__nav {
+  top: var(--sp-1);
+  right: var(--sp-1);
+  padding: 0;
+  background-color: var(--c-code-bg);
+  border-radius: var(--radius-control);
+}
+
+.md-code__button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 1rem;
+  color: var(--c-muted);
+  border-radius: var(--radius-control);
+}
+
+:hover > * > .md-code__button {
+  color: var(--c-muted);
+}
+
+.md-code__button::after {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+/* Hover looks only where there is a real hover: a tap on a phone leaves
+   :hover on the button, and the «Скопировать» tooltip would stay next to
+   the «Скопировано» toast. Keyboard focus shows the same look anywhere. */
+.md-code__button:is(:focus-visible, .focus-visible) {
+  color: var(--c-text);
+  background-color: var(--c-border);
+}
+
+@media (hover: hover) {
+  .md-code__button:hover {
+    color: var(--c-text);
+    background-color: var(--c-border);
+  }
+}
+
+.md-code__button::before {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + var(--sp-1));
+  display: none;
+  padding: var(--sp-1) var(--sp-2);
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--c-bg);
+  white-space: nowrap;
+  content: attr(title);
+  background-color: var(--c-text);
+  border-radius: var(--radius-control);
+  transform: translateY(-50%);
+}
+
+.md-code__button:is(:focus-visible, .focus-visible)::before {
+  display: block;
+}
+
+@media (hover: hover) {
+  .md-code__button:hover::before {
+    display: block;
+  }
+}
+
+/* Phones have no hover, so the word «Скопировать» stands next to the icon,
+   in the button's own colour. */
+@media screen and (max-width: 44.984375em) {
+  .md-code__button {
+    gap: var(--sp-2);
+    width: auto;
+    padding: 0 var(--sp-3);
+  }
+
+  .md-code__button::before {
+    position: static;
+    display: block;
+    order: 1;
+    padding: 0;
+    color: inherit;
+    background-color: transparent;
+    transform: none;
+  }
+}
+
+/* «Скопировано» confirmation, at the bottom centre of the window (Material
+   puts it at the bottom right, about 900px from the button at 1366px).
+   code.js gives its text role="status", so it is read out. [dir] matches
+   Material's [dir=ltr] .md-dialog, which sets the right edge. */
+.md-dialog {
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-4);
+  background-color: var(--c-text);
+  border-radius: var(--radius-control);
+}
+
+[dir] .md-dialog {
+  right: 0;
+  left: 0;
+  width: max-content;
+  max-width: calc(100% - 2 * var(--sp-4));
+  margin-inline: auto;
+}
+
+.md-dialog__inner {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--c-bg);
+}
+
+/* ---------- Tables ---------- */
+
+.md-typeset table:not([class]) {
+  font-size: .9em;
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-container);
+}
+
+.md-typeset table:not([class]) :is(th, td) {
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid var(--c-border);
+}
+
+.md-typeset table:not([class]) th {
+  font-weight: 700;
+  border-top: 0;
+}
+
+/* tables.js gives each header cell role="columnheader" (stacked rows need
+   it, below), and Material reads that role as a sortable table: a pointer
+   cursor, a ↕ on hover, and an empty 1.2em icon box after every header.
+   In a narrow column the box took a line of its own: «Как читается» on
+   01-python/week-02/lesson-03 made the header row 101px instead of 72px at
+   700px, on screen and on paper. These tables do not sort (re-audit B-1). */
+.md-typeset table:not([class]) th[role="columnheader"] {
+  cursor: auto;
+}
+
+.md-typeset table:not([class]) th[role="columnheader"]::after {
+  content: none;
+}
+
+/* Code in a cell: .95em of the .9em table text is 16.2px. At .9em, as
+   elsewhere, it was 15.4px.
+   Material lets inline code break between any two letters, and a table
+   counts on that when it shares out its width: at 644-1402px the word
+   tables cut «ZeroDivisionErro|r» and «print("Здравствуйте!")» at a random
+   letter. Here a column is at least as wide as the longest piece of its
+   code, and the pieces are short: the build puts a <wbr> inside long names
+   (tools/typograph.py, ZeroDivision|Error, print(|"…"). A piece too long
+   for its cell still breaks rather than stick out (re-audit A NEW-2). */
+.md-typeset table:not([class]) code {
+  font-size: .95em;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.md-typeset table:not([class]) tbody tr:hover {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* Below 700px every content table is shown as stacked rows: one block per
+   row, each cell after its column's name («Перевод: программа»).
+   tables.js marks the table (data-stack) and gives each cell its column's
+   name (data-label) and the table its ARIA roles, which display: block
+   can take away. Without the script a table stays a table and scrolls.
+   700px: measured in Chromium on every content table of every page from
+   644 to 1700px, with code in cells kept whole between its breaks (above);
+   the widest (the five-column word tables of english/week-01, week-03 and
+   week-04) fit from 700px with a classic scrollbar, and were up to 56px
+   too wide at 644px. (Until the code was kept whole they fitted from
+   644px by cutting it at a random letter.) At 320-360px they were
+   200-245px too wide, and Android hides the scrollbar. Screen only: paper
+   keeps real tables. */
+@media screen and (max-width: 43.734375em) {
+  /* Material's wrapper is an inline-block; as a block the rows take the
+     column's full width. */
+  .md-typeset__table:has(> table[data-stack]) {
+    display: block;
+  }
+
+  .md-typeset table:not([class])[data-stack] {
+    display: block;
+    width: 100%;
+  }
+
+  .md-typeset table:not([class])[data-stack] :is(tbody, tr, td) {
+    display: block;
+  }
+
+  /* Each cell names its column, so the header row is clipped out of
+     sight, not removed: screen readers still read the column headers. */
+  .md-typeset table:not([class])[data-stack] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .md-typeset table:not([class])[data-stack] tr {
+    padding: var(--sp-2) 0;
+  }
+
+  .md-typeset table:not([class])[data-stack] tr + tr {
+    border-top: 1px solid var(--c-border);
+  }
+
+  .md-typeset table:not([class])[data-stack] td {
+    padding: var(--sp-1) var(--sp-3);
+    border-top: 0;
+  }
+
+  /* The name is drawn here; its alternative text "" keeps screen readers
+     from reading it twice (they announce the column header). Browsers
+     without the «/ ""» syntax drop that line and keep the one before. */
+  .md-typeset table:not([class])[data-stack] td[data-label]::before {
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 700;
+    color: var(--c-muted);
+  }
+
+  /* No colon after a question: «По-немецки похоже? Programm». */
+  .md-typeset table:not([class])[data-stack] td[data-label$="?"]::before {
+    content: attr(data-label) " ";
+    content: attr(data-label) " " / "";
+  }
+}
+
+/* ---------- Callouts (admonitions and the «Ответ» block) ---------- */
+
+/* Four looks only: task (tip, note), answer (success), info (Stepik),
+   warn (warning, failure). Flat fills, no stripe, no shadow; 32px apart so
+   two in a row still read as two.
+
+   Specificity: every selector in this section starts with .md-content, one
+   class more than Material's own admonition and details rules (the
+   strongest are 0,2,3 for the open-state chevron and 0,3,1 for a type's
+   title icon). So these rules win whatever order the stylesheets load in,
+   not only because components.css comes after Material's CSS. Inside the
+   section each rule keeps its old specificity relative to the others. */
+.md-content .md-typeset .admonition,
+.md-content .md-typeset details {
+  --callout-bg: var(--c-task-bg);
+  --callout-fg: var(--c-task-text);
+  --callout-bg-hover: var(--c-task-bg);
+
+  padding: 0 var(--sp-4) var(--sp-4);
+  margin: var(--sp-8) 0;
+  font-size: inherit;
+  color: var(--callout-fg);
+  background-color: var(--callout-bg);
+  border: 0;
+  border-radius: var(--radius-container);
+  box-shadow: none !important;
+}
+
+.md-content .md-typeset :is(.admonition, details).success {
+  --callout-bg: var(--c-answer-bg);
+  --callout-fg: var(--c-answer-text);
+  --callout-bg-hover: var(--c-answer-bg-hover);
+}
+
+.md-content .md-typeset :is(.admonition, details).info {
+  --callout-bg: var(--c-info-bg);
+  --callout-fg: var(--c-info-text);
+  --callout-bg-hover: var(--c-info-bg);
+}
+
+.md-content .md-typeset :is(.admonition, details):is(.warning, .failure, .danger, .bug) {
+  --callout-bg: var(--c-warn-bg);
+  --callout-fg: var(--c-warn-text);
+  --callout-bg-hover: var(--c-warn-bg);
+}
+
+/* Callout title (admonitions). Kept apart from the «Ответ» summary below:
+   a shared :is(.admonition-title, summary) selector would outrank every
+   summary rule. Specificity 0,4,0 beats Material's per-type title fills. */
+.md-content .md-typeset :is(.admonition, details) > .admonition-title {
+  padding: var(--sp-3) var(--sp-4) var(--sp-1) var(--sp-12);
+  margin: 0 calc(-1 * var(--sp-4));
+  color: var(--callout-fg);
+  background-color: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.md-content .md-typeset :is(.admonition, details) > .admonition-title::before {
+  top: calc(var(--sp-3) + (1.65em - 20px) / 2);
+  left: var(--sp-4);
+  width: 20px;
+  height: 20px;
+  background-color: currentcolor;
+}
+
+.md-content .md-typeset :is(.admonition, details) > :last-child {
+  margin-bottom: 0;
+}
+
+.md-content .md-typeset :is(.admonition, details) pre > code {
+  border-radius: var(--radius-control);
+}
+
+/* Phones: code in a callout uses the callout's full width, edge to edge
+   like code on the page (Material), instead of losing 32px more to the
+   callout's side padding. */
+@media screen and (max-width: 44.984375em) {
+  .md-content .md-typeset :is(.admonition, details) > .highlight {
+    margin-inline: calc(-1 * var(--sp-4));
+  }
+
+  .md-content .md-typeset :is(.admonition, details) > .highlight > .filename,
+  .md-content .md-typeset :is(.admonition, details) > .highlight > pre > code {
+    border-radius: 0;
+  }
+}
+
+/* The «Показать ответ» summary is a button: 48px tall, outlined while
+   closed, whole row clickable, label centred. Summary selectors are 0,3,1
+   or more (0,3,2 for ::before/::after), above Material's strongest summary
+   rules ([dir=ltr] .md-typeset summary and .md-typeset .success > summary
+   at 0,2,1; their ::before/::after at 0,2,2, and
+   .md-typeset details[open] > summary::after at 0,2,3). */
+.md-content .md-typeset details:not([open]) {
+  padding-bottom: 0;
+  border: 1px solid var(--c-success);
+  border-radius: var(--radius-control);
+}
+
+.md-content .md-typeset :is(.admonition, details) > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--sp-2) var(--sp-12);
+  margin: 0 calc(-1 * var(--sp-4));
+  color: var(--callout-fg);
+  cursor: pointer;
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+}
+
+/* Closed: concentric with the 4px, 1px-outlined box (beats Material's
+   .md-typeset details:not([open]) > summary radius). */
+.md-content .md-typeset :is(.admonition, details):not([open]) > summary {
+  border-radius: calc(var(--radius-control) - 1px);
+}
+
+.md-content .md-typeset :is(.admonition, details)[open] > summary {
+  margin-bottom: var(--sp-2);
+  border-radius: var(--radius-container) var(--radius-container) 0 0;
+}
+
+/* Hover look only where a pointer hovers: a tapped answer button would
+   keep it. Keyboard focus gets the underline everywhere. */
+@media (hover: hover) {
+  .md-content .md-typeset :is(.admonition, details) > summary:hover {
+    background-color: var(--callout-bg-hover);
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+}
+
+.md-content .md-typeset :is(.admonition, details) > summary:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.md-content .md-typeset :is(.admonition, details) > summary::before {
+  top: calc(50% - 10px);
+  left: var(--sp-4);
+  width: 20px;
+  height: 20px;
+  background-color: currentcolor;
+}
+
+.md-content .md-typeset :is(.admonition, details) > summary::after {
+  top: calc(50% - 10px);
+  right: var(--sp-4);
+  width: 20px;
+  height: 20px;
+  color: currentcolor;
+}
+
+/* ---------- Checklists (Мой прогресс) ---------- */
+
+.md-typeset .task-list-control .task-list-indicator::before {
+  background-color: var(--c-muted);
+}
+
+.md-typeset .task-list-control [type="checkbox"]:checked + .task-list-indicator::before {
+  background-color: var(--c-success);
+}
+
+/* The checkbox input is invisible, so the ring goes on the row. In every
+   browser the row gets it whenever its checkbox (or a link in it) has
+   focus, after a click too. This rule stands outside @supports on purpose:
+   older engines skip any @supports selector() block, and :focus-within is
+   older than both. */
+.md-typeset .task-list-item:focus-within {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+/* Browsers with :has() ring the row for keyboard focus only, as on every
+   other control. The :has() rule (0,4,1) outranks the take-back (0,3,0). */
+@supports selector(:has(a)) {
+  .md-typeset .task-list-item:focus-within {
+    outline: none;
+  }
+}
+
+.md-typeset .task-list-item:has(> .task-list-control > input:focus-visible) {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.md-typeset .progress-list > ul {
+  padding: 0;
+  margin: 0 0 var(--sp-4);
+}
+
+/* Whole row toggles the box (progress.js), except clicks on a link. Rows
+   are 8px apart, so two rows' tap zones do not touch, and the link starts
+   20px after the box (it was 12px), so a tap meant for the box does not
+   open the lesson. */
+.md-typeset .progress-list .task-list-item {
+  min-height: 48px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) calc(var(--sp-12) + var(--sp-2));
+  margin: 0 0 var(--sp-2);
+  cursor: pointer;
+  border-radius: var(--radius-control);
+}
+
+@media (hover: hover) {
+  .md-typeset .progress-list .task-list-item:hover {
+    background-color: var(--c-surface);
+  }
+}
+
+.md-typeset .progress-list .task-list-control .task-list-indicator::before {
+  top: calc(var(--sp-2) + (1.65em - 24px) / 2);
+  left: var(--sp-3);
+  width: 24px;
+  height: 24px;
+}
+
+.md-typeset .progress-footer {
+  font-weight: 700;
+}
+
+/* ---------- Motion ---------- */
+
+/* Nothing slides or fades, and nothing waits for a slide that no longer
+   happens: the closed drawer and its levels hide once they have slid out
+   (`visibility 0s .25s`, chrome.css), and a 0s transition still waits
+   for its delay (CSS Transitions), so without the delay reset they would
+   stay focusable for 0.25s. Material's own reset (`transition: none
+   !important`) does the same today; this rule does not depend on it
+   (review T15 TH). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    animation-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

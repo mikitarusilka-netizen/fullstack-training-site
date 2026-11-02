@@ -1,0 +1,748 @@
+/*
+  Theme «Тетрадь», part 2: the site chrome around the page. Header (site
+  name, theme toggle, search), sidebars (menu and page outline), footer
+  (previous / next). Tokens, typography and layout are in extra.css; links,
+  code, tables, callouts and checklists in components.css, which loads
+  after this file (mkdocs.yml extra_css).
+
+  Colours come only from --c-* tokens, spacing from --sp-*, corners from
+  --radius-*; the px values left are sizes (icons, targets).
+*/
+
+/* ---------- Header ---------- */
+
+.md-header,
+.md-header--shadow {
+  color: var(--c-text);
+  background-color: var(--c-bg);
+  border-bottom: 1px solid var(--c-border);
+  box-shadow: none;
+}
+
+.md-header__title {
+  font-family: var(--font-heading);
+  font-variant-numeric: lining-nums; /* «Урок 1»: see extra.css, headings */
+  font-feature-settings: "lnum" 1;
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+/* A site name or page title too long for one line takes two instead of
+   being cut («Почему для начала не нужен английский» was cut from 576 to
+   about 770px). Two lines of the 18px title at line-height 1.3 are 47px,
+   inside the 48px header, so the header keeps its height; a title that
+   fits stays on one line, centred as before. Not less than 1.3: the clamp
+   hides overflow, and at 1.2 it shaved the bottom of «у», «р», «д» in
+   Android's Noto Serif. The clipping edge is the padding box, and letters
+   at either end reach past their own width: up to 2.2px on the right (the
+   hook of «f» in «elif») and 1px on the left (the serif of «У» in «Урок»),
+   Georgia Bold at 18px. 0.15em (2.7px) of side padding gives them room;
+   the same negative margin keeps the text where it was and each line as
+   long as before. */
+.md-header__topic {
+  align-items: center;
+  height: 100%;
+  white-space: normal;
+}
+
+.md-header__topic > .md-ellipsis {
+  display: -webkit-box;
+  padding: 0 .15em;
+  margin: 0 -.15em;
+  line-height: 1.3;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* The site name links home (header.js wraps it in a link with the hidden
+   logo link's address) and keeps the name's look. The two-line clamp
+   clips at its padding box, which cut the focus ring (2px out, 3px wide,
+   components.css) down to slivers; 6px of padding, taken back by the same
+   negative margin, gives it room and moves no letter. The name never
+   needs a third line that the padding could show: its words are not
+   broken. */
+.md-header__topic > .md-ellipsis > a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.md-header__topic:first-child > .md-ellipsis {
+  padding: 6px;
+  margin: -6px;
+}
+
+/* From 576px Material fades the site name out and the page title in once
+   the h1 has scrolled away. The name is a link the keyboard reaches, so
+   while it has focus it comes back and the title steps aside. */
+.md-header .md-header__title--active .md-header__topic:first-child:focus-within {
+  z-index: 0;
+  pointer-events: auto;
+  opacity: 1;
+  transform: none;
+}
+
+.md-header .md-header__title--active .md-header__topic:first-child:focus-within + .md-header__topic {
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* The ☰ button (below 1220px): 44px, Material's 40px plus 4px of padding
+   taken from its margin, so it takes the same 48px of the header. menu.js
+   puts the icon in a span named «Меню» that is the button (a <label> may
+   not take a role); the span fills the label, padding and all, so its
+   focus ring (components.css) and its target are the label's 44px. */
+.md-header__button[for="__drawer"] {
+  padding: 10px;
+  margin: 2px;
+}
+
+.md-header__button[for="__drawer"] > .menu-toggle {
+  display: block;
+  margin: -10px;
+  padding: 10px;
+}
+
+/* The button starts 2px below the top of the screen, so the site-wide
+   ring 2px outside it lost its top line. It is drawn inside the button,
+   as the drawer's are; !important, as the site-wide offset is (re-audit
+   A NEW-3). The theme button's ring does the same (below). */
+.md-header__button[for="__drawer"] > .menu-toggle:focus-visible {
+  outline-offset: -3px !important;
+}
+
+/* No decorative logo: the site name is the only mark. */
+.md-header__button.md-logo,
+.md-nav__button.md-logo {
+  display: none;
+}
+
+/* Theme toggle: icon plus a written label that says what it does
+   («Включить тёмную тему» / «Включить светлую тему», toggle.name in
+   mkdocs.yml); 44px tall. */
+.md-header__option > label.md-header__button:not([hidden]) {
+  display: inline-flex;
+  gap: var(--sp-2);
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  margin: 0 var(--sp-1);
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-control);
+}
+
+.md-header__option > label.md-header__button::after {
+  content: attr(title);
+}
+
+/* Phones (below 576px): a shorter label on two lines, «Включить / тёмную»
+   («Включить / светлую»), without the icon, so the site name keeps room
+   for two whole lines at 16px. The full «Включить / тёмную тему» would
+   shrink the name below 368px; the short one fits from 341px (Chromium,
+   no scrollbar). The label for __palette_1 switches to dark, the one for
+   __palette_0 to light (palette order in mkdocs.yml). Where even the short
+   label does not fit, icon only (next rules). The radio is named after the
+   theme it selects («Светлая тема» / «Тёмная тема», palette.html). */
+@media screen and (max-width: 35.984375em) {
+  .md-header__option > label.md-header__button:not([hidden]) {
+    gap: var(--sp-1);
+    padding: 0 var(--sp-2);
+  }
+
+  .md-header__option > label.md-header__button > svg {
+    display: none;
+  }
+
+  .md-header__option > label.md-header__button::after {
+    line-height: 1.2;
+    text-align: center;
+    white-space: pre;
+  }
+
+  .md-header__option > label.md-header__button[for="__palette_1"]::after {
+    content: "Включить\A тёмную";
+  }
+
+  .md-header__option > label.md-header__button[for="__palette_0"]::after {
+    content: "Включить\A светлую";
+  }
+
+  /* On a phone the site name takes two lines (rules above) at 16px, the
+     smallest text on the site, so it is not cut to «Путь в про…»:
+     «программирование» needs 169px of it in Georgia, Noto Serif and Droid
+     Serif alike. Where even that is more than the title has (the offline
+     copy below 315px; a window that narrow with a classic scrollbar, or a
+     page zoomed that far), the name gets smaller with the room instead of
+     losing the end of the word: at 9.3% of the title's width the word just
+     fits. Wherever 16px fits, clamp() keeps 16px, and it never goes below
+     13px (.65rem): at doubled text size it was 8.5px; where 13px does not
+     fit, the two-line clamp ends the name with «…». Browsers without
+     container units ignore the second font-size and keep 16px. */
+  [dir="ltr"] .md-header__title {
+    margin-left: var(--sp-1);
+  }
+
+  .md-header__title > .md-header__ellipsis {
+    container-type: inline-size;
+  }
+
+  .md-header__topic > .md-ellipsis {
+    font-size: .8rem;
+    font-size: clamp(.65rem, 9.3cqi, .8rem);
+  }
+
+  /* On a phone the header keeps the site name after scrolling. Material
+     swaps in the page title once the h1 has scrolled away
+     (.md-header__title--active); at 16px a long title needs three lines
+     and ended in «…», and the header changed under the learner's finger.
+     The title is the page's own h1, under the orientation line. The site
+     name keeps its resting values, so nothing moves when Material toggles
+     the class, and the page-title topic is not shown at all. */
+  .md-header .md-header__title--active .md-header__topic {
+    z-index: auto;
+    pointer-events: auto;
+    opacity: 1;
+    transform: none;
+  }
+
+  .md-header__topic + .md-header__topic {
+    display: none;
+  }
+}
+
+/* Icon only (44px wide) where the short label does not fit: below 360px
+   on the hosted site, below 400px in the offline copy, whose header also
+   has a search button; it fits from 341px and 389px (Chromium, no
+   scrollbar). overrides/main.html renders an empty .site-search-on element
+   right before the header when search is built in, so these rules need no
+   :has() (older phone browsers lack it). */
+@media screen and (max-width: 22.484375em) {
+  .md-header__option > label.md-header__button:not([hidden]) {
+    justify-content: center;
+    min-width: 44px;
+  }
+
+  .md-header__option > label.md-header__button[for]::after {
+    content: none;
+  }
+
+  .md-header__option > label.md-header__button > svg {
+    display: block;
+  }
+}
+
+@media screen and (max-width: 24.984375em) {
+  .site-search-on ~ .md-header .md-header__option > label.md-header__button:not([hidden]) {
+    justify-content: center;
+    min-width: 44px;
+  }
+
+  .site-search-on ~ .md-header .md-header__option > label.md-header__button[for]::after {
+    content: none;
+  }
+
+  .site-search-on ~ .md-header .md-header__option > label.md-header__button > svg {
+    display: block;
+  }
+}
+
+/* Offline copy below 360px: menu, toggle and search share the row with the
+   site name, so the outer gaps shrink to 4px and the toggle becomes a 44px
+   square like the menu button. «программирование» then keeps 16px down
+   to 320px (15.996px there; Chromium, no scrollbar). */
+@media screen and (max-width: 22.484375em) {
+  .site-search-on ~ .md-header .md-header__inner {
+    padding: 0;
+  }
+
+  .site-search-on ~ .md-header .md-header__title {
+    margin-right: var(--sp-1);
+  }
+
+  .site-search-on ~ .md-header .md-header__option > label.md-header__button:not([hidden]) {
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+/* Hover fills only where a pointer hovers: on a touch screen a tapped
+   control would keep the fill and look selected. */
+@media (hover: hover) {
+  .md-header__option > label.md-header__button:hover {
+    background-color: var(--c-surface);
+    border-color: var(--c-muted);
+  }
+}
+
+/* Its ring is drawn inside: the button starts 2px below the top of the
+   screen, which cut off the top line of a ring 2px outside (re-audit A
+   NEW-3). */
+.md-header__option > .md-option:focus-visible ~ label.md-header__button:not([hidden]),
+.md-header__option > label.md-header__button:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: -3px !important;
+}
+
+/* Search exists only in the offline copy. */
+.md-search__form {
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-control);
+}
+
+.md-search__input,
+.md-search__input::placeholder,
+.md-search__icon {
+  color: var(--c-text);
+}
+
+/* ---------- Sidebars ---------- */
+
+.md-nav {
+  font-size: .8rem;
+  line-height: 1.5;
+}
+
+.md-nav__title {
+  color: var(--c-muted);
+}
+
+.md-sidebar__scrollwrap,
+.md-sidebar__scrollwrap:hover {
+  scrollbar-color: var(--c-border) transparent;
+}
+
+/* Every menu and outline entry is 48px tall (minimum 44px), 4px apart. */
+.md-nav__link,
+.md-nav--primary .md-nav__link {
+  min-height: 48px;
+  padding: var(--sp-3);
+  margin: var(--sp-1) 0 0;
+  align-items: center;
+  color: var(--c-text);
+  border-radius: var(--radius-control);
+}
+
+.md-nav__container > .md-nav__link {
+  margin-top: var(--sp-1);
+}
+
+.md-nav__container > .md-nav__link > .md-nav__link {
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.md-nav__link:is(:hover, :focus-visible),
+.md-nav__link > .menu-toggle:focus-visible,
+.md-nav__item .md-nav__link--active:hover {
+  color: var(--c-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+/* menu.js moves the content of a menu toggle (a stage, a topic, the
+   current page's entry below 960px) into a span that is the button. The
+   span fills the label, padding and all, so the focus ring and the target
+   are the label's, and lays the content out as the label did. Each level's
+   title in the drawer gets the same (below). */
+.md-nav__link > .menu-toggle {
+  display: flex;
+  flex: 1 1 auto;
+  align-self: stretch;
+  gap: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  min-width: 0;
+  margin: calc(-1 * var(--sp-3));
+  padding: var(--sp-3);
+  border-radius: inherit;
+}
+
+/* Their focus ring is drawn inside them: a level's title clips what lies
+   outside it (overflow: hidden, Material's), so the site-wide ring 2px
+   outside did not show at all there, and an entry is as wide as the
+   drawer, whose edges cut the ring's sides. !important, as the site-wide
+   offset is (components.css). */
+.md-nav__link > .menu-toggle:focus-visible,
+.md-nav--primary .md-nav__title > .menu-toggle:focus-visible {
+  outline-offset: -3px !important;
+}
+
+/* Hover fill on menu and outline entries (the current one keeps its own),
+   only where a pointer hovers: a tapped entry must not keep the fill. */
+@media (hover: hover) {
+  .md-nav__link:not(.md-nav__link--active):hover {
+    background-color: var(--c-surface);
+  }
+}
+
+/* Where am I: the current page and the current outline entry. */
+.md-nav__item .md-nav__link--active,
+.md-nav--primary .md-nav__item--active > .md-nav__link {
+  color: var(--c-text);
+  font-weight: 700;
+}
+
+.md-nav__link--active:not(label),
+.md-nav--primary .md-nav__item--active:not(.md-nav__item--section):not(.md-nav__item--nested) > .md-nav__link {
+  background-color: var(--c-border);
+}
+
+/* In the drawer Material turns it link-blue when focused or hovered:
+   6.5:1 on the fill, under the 7:1 of menu text. */
+.md-nav--primary .md-nav__item--active > .md-nav__link:focus,
+.md-nav--primary .md-nav__item--active > .md-nav__link:hover {
+  color: var(--c-text);
+}
+
+/* Menu icons (the topic chevrons, the drawer's back arrow, the outline
+   icon): the glyph fills its box, and the flex row centres the box on the
+   text. From 1220px Material draws it as an inline-block lowered by .1rem:
+   2.4px below the middle of its hover circle and of the line. */
+.md-nav__icon::after {
+  display: block;
+}
+
+/* Menu levels, told apart by size and weight only (400 and 700):
+   1. sections («Этап 0. Старт», «Английский»): Georgia 18px bold in the
+      text colour, after clear space; from the second on, a line above;
+   2. topics («Тема 2»): bold, with their chevron; pages at this level
+      («Обзор этапа 1») are regular;
+   3. a topic's pages: regular, 16px further in (sidebar; in the drawer a
+      topic opens as its own level, headed by its name).
+   The current page keeps its fill. */
+.md-nav--primary .md-nav__item {
+  border-top: 0;
+}
+
+.md-nav--primary .md-nav__item--section {
+  margin: var(--sp-4) 0 0;
+}
+
+.md-nav--primary .md-nav__item--section ~ .md-nav__item--section {
+  border-top: 1px solid var(--c-border);
+}
+
+/* Line height 1.35: at Material's 1.5 the 18px Georgia letters sat 0.7px
+   above the middle of the 27px line that the drawer's chevron is centred
+   on (Chrome rounds where the glyphs go); at 1.35 they are 0.15px off. */
+.md-nav--primary .md-nav__item--section > .md-nav__link {
+  font-family: var(--font-heading);
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
+  font-size: .9rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--c-text);
+}
+
+.md-nav--primary .md-nav__item--nested:not(.md-nav__item--section) > .md-nav__link {
+  font-weight: 700;
+}
+
+@media screen and (min-width: 76.25em) {
+  .md-nav--primary .md-nav__item--nested:not(.md-nav__item--section) > .md-nav > .md-nav__list {
+    padding-left: var(--sp-4);
+  }
+}
+
+/* Drawer (below 1220px): each level is headed by its name, as its entry
+   looks one level up: the site name in Georgia at the top, a section's
+   name in Georgia 18px, a topic's in the bold body font. The name wraps
+   instead of ending in «…» («Путь в программирован…» at 360), Material's
+   stock book logo is gone, and the back arrow sits on the name's first
+   line instead of in a 60px band above it: its box is one line tall (1lh;
+   24px where lh is unknown, right at the default text size), so its middle
+   is the first line's middle at any text size. No fill: a line under the
+   name parts it from the entries. */
+@media screen and (max-width: 76.234375em) {
+  .md-nav--primary .md-nav__title {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: flex-start;
+    height: auto;
+    min-height: 48px;
+    padding: var(--sp-3);
+    font-size: .8rem;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--c-text);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    background-color: var(--c-bg);
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  /* A level's title goes back up: menu.js puts its content in a span
+     that is the button, filling the title as an entry's does (above). */
+  .md-nav--primary .md-nav__title > .menu-toggle {
+    display: flex;
+    flex: 1 1 auto;
+    align-self: stretch;
+    gap: inherit;
+    align-items: inherit;
+    min-width: 0;
+    margin: calc(-1 * var(--sp-3));
+    padding: var(--sp-3);
+  }
+
+  /* Material snaps each level's list to the start of an entry. Tab to
+     the last entry of a list taller than the drawer (the outline at
+     683x384) scrolled it into view, and the snap pulled the list back:
+     21px of the entry stayed below the drawer. Without the snap the list
+     scrolls as far as focus or a finger takes it (re-audit A NEW-4). */
+  .md-nav--primary .md-nav__title ~ .md-nav__list {
+    scroll-snap-type: none;
+    box-shadow: none;
+  }
+
+  .md-nav--primary .md-nav__title .md-nav__icon {
+    position: static;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    height: 1lh;
+    margin: 0;
+  }
+
+  .md-nav--primary .md-nav__title .md-nav__button.md-logo {
+    display: none;
+  }
+
+  .md-nav--primary .md-nav__title[for="__drawer"],
+  .md-nav--primary .md-nav__item--section > .md-nav > .md-nav__title {
+    font-family: var(--font-heading);
+    font-variant-numeric: lining-nums;
+    font-feature-settings: "lnum" 1;
+    font-size: .9rem;
+    line-height: 1.35;
+    color: var(--c-text);
+    background-color: var(--c-bg);
+  }
+}
+
+/* ---------- Drawer: closing it, and what Tab reaches (menu.js) ---------- */
+
+/* «Закрыть меню», added by menu.js at the top of the drawer: a 48px bar
+   across it, above every level; the levels start under it. */
+.drawer-close {
+  display: none;
+}
+
+@media screen and (max-width: 76.234375em) {
+  .drawer-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+    height: 48px;
+    padding: 0 var(--sp-3);
+    font-family: var(--font-body);
+    font-size: .8rem;
+    line-height: 1.5;
+    color: var(--c-text);
+    cursor: pointer;
+    background-color: var(--c-bg);
+    border: 0;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .drawer-close::before {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    content: "";
+    background-color: currentcolor;
+    -webkit-mask: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>") center / contain no-repeat;
+    mask: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>") center / contain no-repeat;
+  }
+
+  /* The bar meets the drawer's edges on three sides, where the site-wide
+     ring (2px outside, components.css) was cut off: only its bottom line
+     showed, like the divider under it. Here the ring is drawn inside the
+     bar. !important, as the site-wide offset is (review T15 TH-2). */
+  .drawer-close:focus-visible {
+    outline: 3px solid var(--c-accent);
+    outline-offset: -3px !important;
+  }
+
+  /* A link in the drawer is as wide as the drawer, whose edges cut the
+     sides of the site-wide ring: only its top and bottom lines showed.
+     Its ring is drawn inside it, as the menu buttons' is (above); the
+     colour, the width and the 48px target stay. From 1220px the sidebar
+     leaves room for the ring outside (review T15 TH). */
+  .md-nav--primary .md-nav__link:focus-visible {
+    outline-offset: -3px !important;
+  }
+
+  .drawer-close ~ .md-nav--primary {
+    top: 48px;
+    bottom: 0;
+    height: auto;
+  }
+
+  /* The closed drawer is out of sight at x = −242px, but its 62 links took
+     Tab focus. Hidden once it has slid out; visible at once when opened. */
+  [data-md-toggle="drawer"]:not(:checked) ~ .md-container .md-sidebar--primary {
+    visibility: hidden;
+    transition: transform .25s cubic-bezier(.4, 0, .2, 1), box-shadow .25s, visibility 0s .25s;
+  }
+
+  [data-md-toggle="drawer"]:checked ~ .md-container .md-sidebar--primary {
+    visibility: visible;
+    transition: transform .25s cubic-bezier(.4, 0, .2, 1), box-shadow .25s, visibility 0s;
+  }
+
+  /* Levels of the drawer that are not open sit to its right, still
+     focusable: hidden once slid out (Material's own transitions kept). An
+     open level takes the drawer's visibility; "visible" would show it,
+     and let Tab reach it, inside the closed drawer. */
+  .md-nav--primary .md-nav__toggle ~ .md-nav {
+    visibility: hidden;
+    transition: transform .25s cubic-bezier(.8, 0, .6, 1), opacity 125ms 50ms, visibility 0s .25s;
+  }
+
+  .md-nav--primary .md-nav__toggle:checked ~ .md-nav {
+    visibility: inherit;
+    transition: transform .25s cubic-bezier(.4, 0, .2, 1), opacity 125ms 125ms, visibility 0s;
+  }
+
+  /* A level with an open level inside it lies under that one: its title
+     and entries are hidden once the inner level has slid in, and shown at
+     once when it goes. The open level and its way down stay visible.
+     Browsers without :has() skip these two rules and keep Material's way. */
+  .md-sidebar--primary .md-nav:has(> .md-nav__list > .md-nav__item > .md-nav__toggle:checked) > .md-nav__title {
+    visibility: hidden;
+    transition: visibility 0s .25s;
+  }
+
+  .md-sidebar--primary .md-nav:has(> .md-nav__list > .md-nav__item > .md-nav__toggle:checked) > .md-nav__list > .md-nav__item > :not(.md-nav) {
+    visibility: hidden;
+    transition: visibility 0s .25s;
+  }
+}
+
+@media (hover: hover) {
+  .drawer-close:hover {
+    background-color: var(--c-surface);
+  }
+}
+
+/* From 1220px the menu is a sidebar right under the header, which already
+   shows the site name: no second copy at its top. The drawer on narrower
+   screens keeps its title as its heading. */
+@media screen and (min-width: 76.25em) {
+  .md-nav--primary > .md-nav__title {
+    display: none;
+  }
+}
+
+/* The outline's «Содержание» title scrolls away with the outline. Material
+   makes it sticky with a fade in the page colour, so entries would slide
+   under it, as the menu's site name did over «Главная» (audit U31). */
+@media screen and (min-width: 60em) {
+  .md-sidebar .md-nav--secondary > .md-nav__title {
+    position: static;
+    box-shadow: none;
+  }
+}
+
+/* ---------- Footer: previous / next with titles ---------- */
+
+.md-footer {
+  color: var(--c-text);
+  background-color: var(--c-bg);
+  border-top: 1px solid var(--c-border);
+}
+
+.md-footer-meta {
+  display: none;
+}
+
+.md-footer__link,
+.md-footer__link:is(:hover, :focus) {
+  opacity: 1;
+}
+
+.md-footer__direction {
+  font-family: var(--font-body);
+  font-size: .8rem;
+  font-weight: 400;
+  color: var(--c-muted);
+  opacity: 1;
+}
+
+/* Titles wrap instead of ending in «…» (Material keeps them on one line):
+   at twice the text size «Урок 2. Программа решает» needed 221px of 168px.
+   A word too long for a line of its own breaks rather than being cut. */
+.md-footer__title {
+  font-family: var(--font-heading);
+  font-variant-numeric: lining-nums;
+  font-feature-settings: "lnum" 1;
+  font-weight: 700;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.md-footer__link:hover .md-footer__title {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+/* On a phone Material hides the previous title; stack both instead. The
+   side padding is 8px: Material's 1rem doubles with the text size and
+   took 80px of a 248px title at twice the size, so «Программа» broke. */
+@media screen and (max-width: 44.984375em) {
+  .md-footer__inner:not([hidden]) {
+    flex-direction: column;
+  }
+
+  .md-footer__link--prev .md-footer__title {
+    display: block;
+  }
+
+  .md-footer__title {
+    padding: 0 var(--sp-2);
+  }
+}
+
+/* At a raised text size long words in the titles break at a hyphen, the
+   way the text above does (extra.css, re-audit A NEW-1): at 1.5 times the
+   size at 320px «Устанавливаем» broke at a random letter, at twice the
+   size «Предыдущая» and a hundred more. The footer is outside the page
+   column, the container of that rule, so it is a size container of its
+   own. It is as wide as the column plus its two .8rem margins, so its
+   tiers are the column's plus 1.6rem: the titles switch exactly where
+   the text does, and at the normal size never. */
+@media screen and (max-width: 35.984375em) {
+  .md-footer {
+    container-name: footer;
+    container-type: inline-size;
+  }
+
+  @container footer (max-width: 14.6rem) {
+    .md-footer__title {
+      hyphens: auto;
+      hyphenate-limit-chars: 12 5 4;
+    }
+  }
+
+  @container footer (max-width: 10.1rem) {
+    .md-footer__title {
+      hyphenate-limit-chars: 7 3 3;
+    }
+  }
+}
